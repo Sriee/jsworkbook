@@ -26,6 +26,25 @@ app.get("/", (req, res) => {
 
 // Zip code to Temperature conversion 
 app.get(/^\/(\d{5})$/, (req, res, next) => {
+	var zipcode = req.params[0];	// Get zipcode from URI
+	var location = zippDB.zipcode(zipcode);	// Get lat, long
+
+	if(!location.zipcode) {
+		next();
+		return;
+	}
+
+	weather.forecast(location.latitude, location.longitude, (err, data) => {
+		if(err) {
+			next();
+			return;
+		}
+
+		res.json({
+			zipcode: zipcode,
+			temperature: data.currently.temperature
+		});
+	});
 
 });
 
