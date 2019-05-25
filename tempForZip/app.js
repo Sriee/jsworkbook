@@ -4,8 +4,8 @@ const logger  = require("morgan");
 const express = require("express");
 const zippDB = require("zippity-do-dah");
 const forecastIO = require("forecastio");
-const api_router = require("./routers/api_routers");
 
+import { api_router } from "./routers/api_routers";
 
 var app = express();
 var weather = new forecastIO("");
