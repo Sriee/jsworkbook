@@ -3,11 +3,15 @@ const path = require("path");
 const logger  = require("morgan");
 const express = require("express");
 const zippDB = require("zippity-do-dah");
-const forecaseIO = require("forecastio");
+const forecastIO = require("forecastio");
+const api_router = require("./routers/api_routers");
 
 
 var app = express();
-var weather = forecaseIO("");
+var weather = new forecastIO("");
+
+// Register api_routes
+app.use("/api", api_router);
 
 // Setup EJS as views
 app.set("views", path.resolve(__dirname, "views"));
