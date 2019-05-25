@@ -31,7 +31,7 @@ app.get("/new-entry", (req, res) => {
 });
 
 app.post("/new-entry", (req, res) => {
-	if(!res.body.title || !res.body.body) {
+	if(!req.body.title || !req.body.body) {
 		res.status(400).send("Entries must have body and title");
 		return;
 	} else {
@@ -44,7 +44,7 @@ app.post("/new-entry", (req, res) => {
 	res.redirect("/");
 });
 
-app.use((req, res) = {
+app.use((req, res) => {
 	res.status(404).render("404");
 });
 
