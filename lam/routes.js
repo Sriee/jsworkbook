@@ -13,13 +13,13 @@ router.use((req, res, next) => {
 
 router.get("/", (req, res, next) => {
 	User.find()
-	.sort({ createdAt: "decending" })
+	.sort({ createdAt: "descending" })
 	.exec((err, users) => {
 		if(err) {
-			return next(err)
+			return next(err);
 		}
 		res.render("index", { users: users });
 	});
 });
 
-export { router as routes };
+module.exports = router;

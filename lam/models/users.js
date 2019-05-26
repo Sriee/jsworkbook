@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 
 
-var userSchema = mongoose.userSchema({
+var userSchema = new mongoose.Schema({
 	username: { type: String, required: true, unique: true },
 	password: { type:String, required: true },
 	createdAt: { type: Date, default: Date.now },
@@ -42,10 +42,12 @@ userSchema.pre("save", (done) => {
 });
 
 
-userSchema.methods.checkPassword = (guess done) => {
+userSchema.methods.checkPassword = (guess, done) => {
 	bcrypt.compare(guess, (err, isMatch)=> {
 		done(err, isMatch);
 	});
 };
 
-export var User = mangoose.model("User", userSchema);
+var User = mongoose.model("User", userSchema);
+
+module.exports = User;
