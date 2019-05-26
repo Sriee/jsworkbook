@@ -1,12 +1,13 @@
-const mongoose = require("mongoose");
+const ejs = require("ejs");
 const path = require("path");
+const flash = require("connect-flash");
+const logger = require("morgan");
 const express = require("express");
 const session = require("express-session");
-const ejs = require("ejs");
-const logger = require("morgon");
-const bodyParser = require("bodyParser");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const flash = require("connect-flash");
+
 
 const routes = require('./routes');
 var app = express();
@@ -33,6 +34,11 @@ app.use(session({
 }));
 app.use(flash());
 app.use(routes);
+
+// Last middleware to reach for wrong URI. Sends back 404
+app.use((req, res) => {
+	res.status(404).render("404");
+});
 
 app.listen(app.get("port"), () => {
 	console.log("App server started at " + app.get("port"));
