@@ -57,7 +57,11 @@ app.use((req, res) => {
 	res.status(404).render("404");
 });
 
+/*
 // Start Server
 app.listen(3000, () => {
 	console.log("tempForZip server started listening at port 3000.");
 });
+*/
+
+module.exports = app;
