@@ -11,10 +11,13 @@ const cookieParser = require("cookie-parser");
 
 
 const routes = require('./routes');
+const setupPassport = require("./setuppassport");
+
 var app = express();
 
 // Connect to Mongo DB
 mongoose.connect("mongodb://localhost:27017/test");
+setupPassport();
 
 app.set("port", process.env.PORT || 3000);
 
