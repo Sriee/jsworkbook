@@ -52,7 +52,7 @@ router.post("/signup", (req, res, next) => {
 
 		newUser.save(next);
 		});
-	}, passport.authenticate("local", {
+	}, passport.authenticate("login", {
 		successRedirect: "/",
 		failureRedirect: "/signup",
 		failureFlash: true
@@ -66,5 +66,17 @@ router.get("/users/:username", (req, res, next) => {
 		res.render("profile", {user: user});
 	});
 });
+
+
+router.get("/login", (req, res) => {
+	res.render("login");
+});
+
+router.post("/login", passport.authenticate("login", {
+	successRedirect: "/",
+	failureRedirect: "/login",
+	failureFlash: true
+}));
+
 
 module.exports = router;
