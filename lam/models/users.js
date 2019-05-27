@@ -11,12 +11,12 @@ var userSchema = new mongoose.Schema({
 });
 
 // Return user name or display name
-userSchema.methods.name = () => {
+userSchema.methods.name = function() {
 	return this.displayName || this.username;
 };
 
 // Compute Hash while Pre-saving to the database
-userSchema.pre("save", (done) => {
+userSchema.pre("save", function(done) {
 	var user = this;
 
 	// If the password for the user is not modified then don't need to do anything
@@ -26,12 +26,12 @@ userSchema.pre("save", (done) => {
 	}
 
 	// Generate salt and hash for the password
-	bcrypt.genSalt(10, (err, salt) => {
+	bcrypt.genSalt(10, function(err, salt) {
 		if(err) {
 			return done(err);
 		}
 
-		bcrypt.hash(user.password, salt, (err, hashedPassword) => {
+		bcrypt.hash(user.password, salt, function(err, hashedPassword) {
 			if(err) {
 				return done(err);
 			}
@@ -43,7 +43,7 @@ userSchema.pre("save", (done) => {
 
 
 userSchema.methods.checkPassword = (guess, done) => {
-	bcrypt.compare(guess, (err, isMatch)=> {
+	bcrypt.compare(guess, (err, isMatch) => {
 		done(err, isMatch);
 	});
 };
