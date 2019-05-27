@@ -1,4 +1,6 @@
 const express = require("express");
+const passport = require("passport");
+// const localStrategy = require("passport-local");
 const User = require("./models/users");
 
 const router = express.Router();
@@ -21,5 +23,40 @@ router.get("/", (req, res, next) => {
 		res.render("index", { users: users });
 	});
 });
+
+
+router.get("/signup", (req, res) => {
+	res.render("signup");
+});
+
+
+router.post("/signup", (req, res, next) => {
+	var username = req.body.username;
+	var password = req.body.password;
+	console.log(typeof username);
+	console.log(typeof password);
+	console.log(username + " " + password);
+
+	User.findOne( {username: username}, (err, user) => {
+		if(err) { return next(err); }
+
+		if(user) {
+			req.flash("error", "User already exists!");
+			return res.redirect("/signup");
+		}
+
+		var newUser = new User({
+			username: username,
+			password: password
+		});
+
+		newUser.save(next);
+		});
+	}, passport.authenticate("local", {
+		successRedirect: "/",
+		failureRedirect: "/signup",
+		failureFlash: true
+}));
+
 
 module.exports = router;

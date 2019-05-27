@@ -5,6 +5,7 @@ const logger = require("morgan");
 const express = require("express");
 const session = require("express-session");
 const mongoose = require("mongoose");
+const passport = require("passport");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 
@@ -33,6 +34,8 @@ app.use(session({
 	saveUninitialized: true
 }));
 app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(routes);
 
 // Last middleware to reach for wrong URI. Sends back 404
