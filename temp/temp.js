@@ -1,18 +1,20 @@
 function checking(toUpdate) {
 	let toSet = {};
 
-	if("osName" in toUpdate) 
-		toSet.os_name = toUpdate.osName;
+	if("volumeSerialNo" in toUpdate) 
+		toSet.volume_serial_no = toUpdate.volumeSerialNo;
 	
-	if("osVersion" in toUpdate)
-		toSet.os_version = toUpdate.osVersion;
+	if("volumeName" in toUpdate)
+		toSet.volume_name = toUpdate.volumeName;
 
-	if("computerName" in toUpdate)
-		toSet.computer_name = toUpdate.computerName;
+	if("partition" in toUpdate)
+		toSet.partition = toUpdate.partition;
 
-	if("storageCapacity" in toUpdate)
-		toSet.storage_capacity = toUpdate.storageCapacity;
+	if("size" in toUpdate)
+		toSet.size = toUpdate.size;
 
+	var i = 0, j = 1;
+	
 	console.log(toSet);
 }
 
