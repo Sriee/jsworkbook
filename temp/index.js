@@ -55,52 +55,75 @@ function updateDeviceInfo(deviceID, toUpdate) {
 	});
 }
 
+
 function upateStorageInfo(deviceID, diskID, volumeSerialNo, toUpdate) {
-	Device.findOne({os_Name: "Windows"}, { storage_info: 1 }, function(err, deviceDoc) {
-	if(err) {
-		console.error(err);
-		return;
-	}
+	let toSet = {};
 
-	if(!deviceDoc) {
-		console.error("Couldn't get storage info");
-		return;
-	}
+	if("volumeSerialNo" in toUpdate) 
+		toSet.volume_serial_no = toUpdate.volumeSerialNo;
+	
+	if("volumeName" in toUpdate)
+		toSet.volume_name = toUpdate.volumeName;
 
-	let toChange;
+	if("partition" in toUpdate)
+		toSet.partition = toUpdate.partition;
 
-	deviceDoc.storage_info.map(function(storageDoc, i) {
+	if("size" in toUpdate)
+		toSet.size = toUpdate.size;
 
-		if(storageDoc.disk_id == "SAMSUNGMSP3SSD") {
+	Device.findOne({ _id: deviceID }, { storage_info: 1 }, function(err, deviceDoc) {
+		if(err) {
+			console.error(err);
+			return;
+		}
 
-			storageDoc.logical_partitions.map(function(partition, j) {
-			
-				if(partition.volume_serial_no == "EW32RW3") {
+		if(!deviceDoc) {
+			console.error("Couldn't get storage info");
+			return;
+		
+		}
 
-					toChange = `storage_info.${i}.logical_partitions.${j}.disk_size`;
-					Device.updateOne({ "storage_info": { $elemMatch: { "disk_id": "SAMSUNGMSP3SSD", "logical_partitions.volume_serial_no": "EW32RW3" } } },
-						{ $set: { [`${toChange}`] : 40536870912 }},
-						function(err, updateRes){
-							if(err) {
-								console.error(err);
-								return;
-							}
+		let toChange = {};
 
-							if(updateRes) {
-								console.log("Apada updated");
-								console.log(updateRes);
-								return;
-							}
-						});
-					}
-				});
+		deviceDoc.storage_info.map(function(storageDoc, i) {
+
+			if(storageDoc.disk_id == diskID) {
+
+				storageDoc.logical_partitions.map(function(partition, j) {
+				
+					if(partition.volume_serial_no == volumeSerialNo) {
+
+						toChange = `storage_info.${i}.logical_partitions.${j}.disk_size`;
+						Device.updateOne({ "storage_info": { $elemMatch: { "disk_id": diskID, "logical_partitions.volume_serial_no": volumeSerialNo } } },
+							toChange,
+							function(err, updateRes){
+								if(err) {
+									console.error(err);
+									return;
+								}
+
+								if(updateRes) {
+									console.log(updateRes);
+									return;
+								}
+							});
+						}
+					});
 			}
 		});
 	});
 }
 
+/*
 updateDeviceInfo("5cfdcc734aced009c350b45e", {
 	osName: "Linux",
 	osVersion: "Ubuntu 18.04 LTS"
 });
+*/
+
+upateStorageInfo("5cfdcc734aced009c350b45e", 
+	"LENSE20256GMSP34MEAT2TA",
+	"282DAB8A",
+	{ volumeName: "Movies", size: 37000000});
+
 console.log("End.");
