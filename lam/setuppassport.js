@@ -25,7 +25,7 @@ passport.use("login", new LocalStrategy(
 				return done(done, false, { message: "No user exists with that user name."});
 			}
 
-			User.checkPassword(password, function(err, isMatch) {
+			user.checkPassword(password, function(err, isMatch) {
 				if(err) {
 					return done(err);
 				}
