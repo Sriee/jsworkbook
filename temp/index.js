@@ -45,14 +45,13 @@ function updateDeviceInfo(deviceID, toUpdate) {
 	if("storageCapacity" in toUpdate)
 		toSet.storage_capacity = toUpdate.storageCapacity;
 
-	Device.findByIdAndUpdate(deviceID, { $set: toSet }, function(err, updateRes) {
+	Device.updateOne({ _id: deviceID }, toSet, function(err, updateOpRes) {
 		if(err) {
 			console.log(err);
 			return;
 		}
 
-		console.log(updateRes);
-		return;
+		console.log(updateOpRes);
 	});
 }
 
@@ -100,5 +99,8 @@ function upateStorageInfo(deviceID, diskID, volumeSerialNo, toUpdate) {
 	});
 }
 
-updateDeviceInfo("5cfdcc734aced009c350b45e", {});
+updateDeviceInfo("5cfdcc734aced009c350b45e", {
+	osName: "Linux",
+	osVersion: "Ubuntu 18.04 LTS"
+});
 console.log("End.");
