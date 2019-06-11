@@ -42,9 +42,8 @@ function updateDeviceInfo(endpointID, toUpdate) {
 }
 
 
-function upateStorageInfo(endpointID, diskID, volumeSerialNo, toUpdate) {
-	let toSet = {};
-
+function updateStorageInfo(endpointID, toUpdate) {
+	console.log("First of all. Am i reaching here.");
 	Device.findOne({ _id: endpointID }, { storage_info: 1 }, function(err, deviceDoc) {
 		if(err) {
 			console.error(err);
@@ -57,17 +56,17 @@ function upateStorageInfo(endpointID, diskID, volumeSerialNo, toUpdate) {
 		
 		}
 
-		let toChange = {};
+		let toSet = {};
 
 		deviceDoc.storage_info.map(function(storageDoc, i) {
 
-			if(storageDoc.disk_id == diskID) {
+			if(storageDoc.disk_id == toUpdate.diskID) {
 
 				storageDoc.logical_partitions.map(function(partition, j) {
 				
-					if(partition.volume_serial_no == volumeSerialNo) {
-
-						if("volumeSerialNo" in toUpdate) 
+					if(partition.volume_serial_no == toUpdate.volumeSerialNo) {
+						console.log("Have I reached here.");
+						if("volumeNameSerialNo" in toUpdate) 
 							toSet[`storage_info.${i}.logical_partitions.${j}.volume_serial_no`] = toUpdate.volumeSerialNo;
 
 						if("volumeName" in toUpdate)
@@ -79,7 +78,7 @@ function upateStorageInfo(endpointID, diskID, volumeSerialNo, toUpdate) {
 						if("size" in toUpdate)
 							toSet[`storage_info.${i}.logical_partitions.${j}.size`] = toUpdate.size;
 
-						Device.updateOne({ "storage_info": { $elemMatch: { "disk_id": diskID, "logical_partitions.volume_serial_no": volumeSerialNo } } },
+						Device.updateOne({ "storage_info": { $elemMatch: { "disk_id": toUpdate.diskID, "logical_partitions.volume_serial_no": toUpdate.volumeSerialNo } } },
 							toSet,
 							function(err, updateRes){
 								if(err) {
@@ -107,21 +106,24 @@ app.patch("/:psn/:endpointId", function (req, res) {
 
 	try {
 		if("storageInfo" in reqBody) {
-			if(!(reqBody.storageInfo.constructor == Object)){
+
+			if(reqBody.storageInfo.constructor != Object){
 				throw {
 					status: 422,
 					message: "Could not update. Recieved unexpected type for storage info"
 				};
-			updateStorageInfo(endpointID, reqBody.diskID, reqBody.volumeSerialNo, toUpdate.storageInfo);
+			}
+			updateStorageInfo(endpointId, reqBody.storageInfo);
 
 			// Delete storage info from request body
 			console.log("Deleting \"storageInfo\" from request body.");
 			delete reqBody.storageInfo;
-			}
 		}
 
-		console.log("Update top level Device Infomation");
-		updateDeviceInfo(endpointId, reqBody);
+		if(Object.keys(reqBody).length !== 0) {
+			console.log("Update top level Device Infomation");
+			updateDeviceInfo(endpointId, reqBody);
+		}
 		
 		res.status(200);
 		res.send({
