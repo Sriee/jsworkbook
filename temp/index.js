@@ -124,7 +124,7 @@ app.patch("/:endpointId", function (req, res) {
 				};
 			}
 
-			if(!("diskId" in reqBody.storageInfo && "volumeSerialNo" in reqBody.storageInfo)) {
+			if(!("diskID" in reqBody.storageInfo && "volumeSerialNo" in reqBody.storageInfo)) {
 				throw {
 					status: 400,
 					message: "Missing Required fields."
