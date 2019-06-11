@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 
-function updateDeviceInfo(endpointID, toUpdate) {
+function updateDeviceInfo(endpointID, toUpdate, res) {
 	let toSet = {};
 
 	if("osName" in toUpdate) 
@@ -29,31 +29,38 @@ function updateDeviceInfo(endpointID, toUpdate) {
 	if("storageCapacity" in toUpdate)
 		toSet.storage_capacity = toUpdate.storageCapacity;
 
-	console.log(toSet);
-	Device.updateOne({ _id: endpointID }, toSet, function(err, updateOpRes) {
+	Device.updateOne({ "endpoint_id": endpointID }, toSet, function(err, updateOpRes) {
 		if(err) {
-			console.log("Error in updating top level Device Information");
-			return;
+			res.status(422);
+			res.send({
+				message: err
+			});
 		}
 
-		console.log(updateOpRes);
-		return;
+		if(updateOpRes.nModified == 0) {
+			res.status(422);
+			res.send({
+				message: "Update failed. Try again later."
+			})
+		} 
 	});
 }
 
 
-function updateStorageInfo(endpointID, toUpdate) {
-	console.log("First of all. Am i reaching here.");
-	Device.findOne({ _id: endpointID }, { storage_info: 1 }, function(err, deviceDoc) {
+function updateStorageInfo(endpointID, toUpdate, res) {
+	Device.findOne({ "endpoint_id" : endpointID }, { storage_info: 1 }, function(err, deviceDoc) {
 		if(err) {
-			console.error(err);
-			return;
+			res.status(422);
+			res.send({
+				message: err
+			});
 		}
 
 		if(!deviceDoc) {
-			console.error("Couldn't get storage info");
-			return;
-		
+			res.status(422);
+			res.send({
+				message: "Couldn't find Storage Info for \"" + endpointID + "\"."
+			})
 		}
 
 		let toSet = {};
@@ -65,7 +72,7 @@ function updateStorageInfo(endpointID, toUpdate) {
 				storageDoc.logical_partitions.map(function(partition, j) {
 				
 					if(partition.volume_serial_no == toUpdate.volumeSerialNo) {
-						console.log("Have I reached here.");
+						
 						if("volumeNameSerialNo" in toUpdate) 
 							toSet[`storage_info.${i}.logical_partitions.${j}.volume_serial_no`] = toUpdate.volumeSerialNo;
 
@@ -80,16 +87,20 @@ function updateStorageInfo(endpointID, toUpdate) {
 
 						Device.updateOne({ "storage_info": { $elemMatch: { "disk_id": toUpdate.diskID, "logical_partitions.volume_serial_no": toUpdate.volumeSerialNo } } },
 							toSet,
-							function(err, updateRes){
+							function(err, updateOpRes){
 								if(err) {
-									console.error(err);
-									return;
+									res.status(422);
+									res.send({
+										message: "Update Storage Info failed. Try again later."
+									})
 								}
 
-								if(updateRes) {
-									console.log(updateRes);
-									return;
-								}
+								if(updateOpRes.nModified == 0) {
+									res.status(422);
+									res.send({
+										message: "Update failed. Try again later."
+									})
+								} 
 							});
 						}
 					});
@@ -98,8 +109,7 @@ function updateStorageInfo(endpointID, toUpdate) {
 	});
 }
 
-app.patch("/:psn/:endpointId", function (req, res) {
-	const psn = req.params.psn;
+app.patch("/:endpointId", function (req, res) {
 	const endpointId = req.params.endpointId;
 
 	var reqBody = req.body;
@@ -109,11 +119,18 @@ app.patch("/:psn/:endpointId", function (req, res) {
 
 			if(reqBody.storageInfo.constructor != Object){
 				throw {
-					status: 422,
+					status: 400,
 					message: "Could not update. Recieved unexpected type for storage info"
 				};
 			}
-			updateStorageInfo(endpointId, reqBody.storageInfo);
+
+			if(!("diskId" in reqBody.storageInfo && "volumeSerialNo" in reqBody.storageInfo)) {
+				throw {
+					status: 400,
+					message: "Missing Required fields."
+				};
+			}
+			updateStorageInfo(endpointId, reqBody.storageInfo, res);
 
 			// Delete storage info from request body
 			console.log("Deleting \"storageInfo\" from request body.");
@@ -122,13 +139,14 @@ app.patch("/:psn/:endpointId", function (req, res) {
 
 		if(Object.keys(reqBody).length !== 0) {
 			console.log("Update top level Device Infomation");
-			updateDeviceInfo(endpointId, reqBody);
+			updateDeviceInfo(endpointId, reqBody, res);
 		}
-		
+
+		// Send error message before reaching here
 		res.status(200);
 		res.send({
 			message: "Device Update successful."
-		});
+		});	
 	} catch (e) {
 		res.status(e.status || 422);
 		res.send({
