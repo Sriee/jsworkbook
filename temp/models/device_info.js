@@ -6,7 +6,6 @@ var deviceSchema = new mongoose.Schema({
 	os_name: String,                                      
     os_version: String,
     computer_name: String,
-    storage_capacity: Number,
     storage_info: [
         {
             disk_id: String,

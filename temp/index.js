@@ -109,6 +109,32 @@ function updateStorageInfo(endpointID, toUpdate, res) {
 	});
 }
 
+
+app.get("/:endpointId", function(req, res) {
+
+	Device.findOne({ "endpoint_id": req.params.endpointId }, { "_id": 0 }, function(err, doc) {
+
+		if(err) {
+			console.log(err);
+			res.status(422);
+			res.send({
+				message: err
+			});
+		}
+
+		if(!doc) {
+			res.status(422);
+			res.send({
+				message: `Could not find device record for \'${req.params.endpointId}\'`
+			});
+			return;
+		}
+		res.status(200);
+		res.json(doc);
+	});
+});
+
+
 app.patch("/:endpointId", function (req, res) {
 	const endpointId = req.params.endpointId;
 
@@ -155,18 +181,6 @@ app.patch("/:endpointId", function (req, res) {
 	}
 });
 
-/*
-updateDeviceInfo("5cfdcc734aced009c350b45e", {
-	osName: "Linux",
-	osVersion: "Ubuntu 18.04 LTS"
-});
-
-
-upateStorageInfo("5cfdcc734aced009c350b45e", 
-	"LENSE20256GMSP34MEAT2TA",
-	"282DAB8A",
-	{ volumeName: "Movies", size: 37000000});
-*/
 
 // Last middleware to reach for wrong URI. Sends back 404
 app.use((req, res) => {
