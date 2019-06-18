@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const Device = require("./models/device_info");
+const enrollment = require("./routes/enrollment");
 
 var app = express();
 
@@ -12,7 +13,7 @@ mongoose.connect("mongodb://localhost:27017/test", {useNewUrlParser: true});
 // Initialize Express
 app.use(express.json());
 app.use(morgan("dev"));
-
+app.use("/enrollment", enrollment);
 
 function updateDeviceInfo(endpointID, toUpdate, res) {
 	let toSet = {};
@@ -41,7 +42,7 @@ function updateDeviceInfo(endpointID, toUpdate, res) {
 			res.status(422);
 			res.send({
 				message: "Update failed. Try again later."
-			})
+			});
 		} 
 	});
 }
@@ -60,7 +61,7 @@ function updateStorageInfo(endpointID, toUpdate, res) {
 			res.status(422);
 			res.send({
 				message: "Couldn't find Storage Info for \"" + endpointID + "\"."
-			})
+			});
 		}
 
 		let toSet = {};
@@ -92,14 +93,14 @@ function updateStorageInfo(endpointID, toUpdate, res) {
 									res.status(422);
 									res.send({
 										message: "Update Storage Info failed. Try again later."
-									})
+									});
 								}
 
 								if(updateOpRes.nModified == 0) {
 									res.status(422);
 									res.send({
 										message: "Update failed. Try again later."
-									})
+									});
 								} 
 							});
 						}
@@ -181,6 +182,12 @@ app.patch("/:endpointId", function (req, res) {
 	}
 });
 
+
+app.use(function(err, req, res, next) {
+	res.status(err.status || 500);
+	delete err.status;
+	res.json(err);
+});
 
 // Last middleware to reach for wrong URI. Sends back 404
 app.use((req, res) => {
