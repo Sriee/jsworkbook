@@ -13,5 +13,9 @@
     "express": "^4.17.1",
     "mongoose": "^5.5.14",
     "morgan": "^1.9.1"
+  },
+  "devDependencies": {
+    "htmlparser": "^1.7.7",
+    "request": "^2.60.0"
   }
 }
