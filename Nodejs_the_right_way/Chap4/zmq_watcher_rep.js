@@ -18,6 +18,16 @@ if (cluster.isMaster) {
     console.log(`Worker ${worker.process.pid} is online !..`);
   });
 
+  cluster.on("exit", (worker, code, signal) => {
+    console.log(
+      "Yo Worker: %s died (%s). Respawing new worker...",
+      worker.id,
+      signal || code
+    );
+
+    cluster.fork();
+  });
+
   for (let i = 0; i < workersCount; i++) {
     cluster.fork();
   }
@@ -53,6 +63,9 @@ if (cluster.isMaster) {
   });
 }
 
+/**
+ * While using this remove the exit event listener which respawns process
+ */
 function terminate() {
   if (!cluster.isMaster) return;
 
