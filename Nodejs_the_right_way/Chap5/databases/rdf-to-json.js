@@ -1,13 +1,22 @@
 "use strict";
 
-const fs = require("fs");
+const dir = require("node-dir");
 const parseRDF = require("./lib/parse-rdf");
-const filename = process.argv[2];
+const dirname = process.argv[2];
 
-if (!filename)
-  throw Error("File name missing. Usage rdf-to-json <file_name>.rdf");
+if (!dirname)
+  throw Error("Directory name missing. Usage rdf-to-json <dirname>");
 
-const rdf = fs.readFileSync(filename);
-let book = parseRDF(rdf);
+const options = {
+  match: /\.rdf$/,
+  exclude: ["pg0.rdf"],
+};
 
-console.log(JSON.stringify(book, null, " "));
+dir.readFiles(dirname, options, (err, content, next) => {
+  if (err) throw err;
+
+  let book = parseRDF(content);
+  console.log(JSON.stringify({ index: { _id: "pg" + book.id } }));
+  console.log(JSON.stringify(book));
+  next();
+});
