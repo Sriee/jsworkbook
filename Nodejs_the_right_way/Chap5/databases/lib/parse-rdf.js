@@ -19,5 +19,6 @@ module.exports = (rdf) => {
     .toArray()
     .map((elem) => $(elem).text());
 
+  body.lcc = $('[rdf\\:resource$="/LCC"]').parent().find("rdf\\:value").text();
   return body;
 };

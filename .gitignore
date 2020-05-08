@@ -3,3 +3,4 @@ node_modules/
 *.sublime-workspace
 Reference.md
 *.rdf
+rdf-files.tar.bz2
