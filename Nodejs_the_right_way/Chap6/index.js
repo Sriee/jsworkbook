@@ -33,19 +33,62 @@ program
   .command("get [path]")
   .description("get request to Elastic search cluster [default='/']")
   .action((path = "/") => {
-    let url = fullURL(path);
-    console.log(url + " " + program.json);
     let options = {
-      url: url,
+      url: fullURL(path),
       json: program.json,
     };
-    request.get(options, (err, res, body) => {
-      if (program.json) {
-        console.log(JSON.stringify(err || body));
-      } else {
-        if (err) throw err;
-        console.log(body);
-      }
-    });
+    request.get(options, handleResponse);
   });
+
+program
+  .command("create-index")
+  .description("Create an Elastic Search Index")
+  .action(() => {
+    if (!program.index) {
+      handleError("ES Index name missing. Create one using --index option");
+      return;
+    }
+
+    request.put({ url: fullURL(), json: program.json }, handleResponse);
+  });
+
+program
+  .action("list-index")
+  .alias("li")
+  .description("List ES index")
+  .action(() => {
+    const path = fullURL(program.json ? "_all" : "_cat/indices");
+    request.get({ url: path, json: program.json }, handleResponse);
+  });
+
+function handleError(err) {
+  if (program.json) {
+    if (err instanceof Error) {
+      console.log(
+        JSON.stringify({
+          name: err.name,
+          message: err.message,
+          stack: err.stack,
+        })
+      );
+    } else {
+      console.log(JSON.stringify({ err: err }));
+    }
+  } else if (err instanceof Error) throw err;
+  else throw Error(err);
+}
+
+function handleResponse(err, resp, body) {
+  if (err) handleError(err);
+
+  // console.log("Response Code: %d", resp.statusCode);
+
+  if (program.json) {
+    body = JSON.stringify(body);
+    console.log(body);
+  } else {
+    console.log(body);
+  }
+}
+
 program.parse(process.argv);
