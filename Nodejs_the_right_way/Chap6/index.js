@@ -1,8 +1,9 @@
 "use strict";
 
+const fs = require("fs");
+const pkg = require("./package.json");
 const program = require("commander");
 const request = require("request");
-const pkg = require("./package.json");
 
 program
   .version(pkg.version)
@@ -53,12 +54,43 @@ program
   });
 
 program
-  .action("list-index")
+  .command("list-index")
   .alias("li")
   .description("List ES index")
   .action(() => {
     const path = fullURL(program.json ? "_all" : "_cat/indices");
     request.get({ url: path, json: program.json }, handleResponse);
+  });
+
+program
+  .command("bulk <file>")
+  .description("Inserting docs to ES in bulk")
+  .action((file) => {
+    if (!program.index) {
+      handleError("ES Index name missing. Issue one using --index option");
+      return;
+    }
+
+    fs.stat(file, (err, stats) => {
+      if (err) {
+        handleError(err);
+        return;
+      }
+
+      let options = {
+        url: fullURL("books/_bulk"),
+        json: true,
+        headers: {
+          "content-length": stats.size,
+          "content-type": "application/json",
+        },
+      };
+
+      let post = request.post(options);
+      const stream = fs.createReadStream(file);
+      stream.pipe(post);
+      post.pipe(process.stdout);
+    });
   });
 
 function handleError(err) {
