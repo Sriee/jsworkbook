@@ -13,7 +13,8 @@ program
   .option("-p, --port <number>", "Port no [9200]", "9200")
   .option("-j, --json", "Format output as JSON", false)
   .option("-i, --index <name>", "Which index to use")
-  .option("-t, --type <type>", "Default type for bulk operation");
+  .option("-t, --type <type>", "Default type for bulk operation")
+  .option("-f, --filter <filter>", "Add Filter to query result");
 
 function fullURL(path = "") {
   let url = `http://${program.hostname}:${program.port}/`;
@@ -91,6 +92,43 @@ program
       stream.pipe(post);
       post.pipe(process.stdout);
     });
+  });
+
+program
+  .command("query [queries]")
+  .alias("q")
+  .description("Queries Elastic Search")
+  .action((queries = []) => {
+    let options = {
+      url: fullURL(program.index ? `${program.index}/_search` : "_search"),
+      json: program.json,
+      qs: {},
+    };
+
+    if (queries && queries.length) options.qs.q = queries.join(" ");
+
+    if (program.filter) options.qs._source = program.filter;
+
+    request.post(options, handleResponse);
+  });
+
+program
+  .command("delete-index")
+  .alias("del")
+  .description("Delete an Elastic Search index")
+  .action(() => {
+    if (!program.index) {
+      handleError("ES Index name missing. Issue one using --index option");
+      return;
+    }
+
+    request.del(
+      {
+        url: fullURL(),
+        json: program.json,
+      },
+      handleResponse
+    );
   });
 
 function handleError(err) {
