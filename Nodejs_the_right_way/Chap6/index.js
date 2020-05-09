@@ -14,13 +14,16 @@ program
   .option("-j, --json", "Format output as JSON", false)
   .option("-i, --index <name>", "Which index to use")
   .option("-t, --type <type>", "Default type for bulk operation")
-  .option("-f, --filter <filter>", "Add Filter to query result");
+  .option("-f, --filter <filter>", "Add Filter to query result")
+  .option("--id <id>", "ID for the new index")
+  .option("-d, --data <json-string>", "Data for inserting a document");
 
 function fullURL(path = "") {
   let url = `http://${program.hostname}:${program.port}/`;
   if (program.index) {
     url += `${program.index}/`;
     if (program.type) url += `${program.type}/`;
+    if (program.id) url += `${program.id}/`;
   }
 
   return url + path.replace(/^\/*/, "");
@@ -79,7 +82,7 @@ program
       }
 
       let options = {
-        url: fullURL("books/_bulk"),
+        url: fullURL("_bulk"),
         json: true,
         headers: {
           "content-length": stats.size,
@@ -129,6 +132,45 @@ program
       },
       handleResponse
     );
+  });
+
+program
+  .command("put [file]")
+  .description("Insert a document to an index")
+  .action((file) => {
+    if (!program.id)
+      handleError("ID missing. Issue -id for the new document to insert");
+
+    if (file) {
+      fs.stat(file, (err, stats) => {
+        if (err) {
+          handleError(err);
+          return;
+        }
+
+        let options = {
+          url: fullURL(),
+          json: true,
+          headers: {
+            "content-size": stats.size,
+            "content-type": "application/json",
+          },
+        };
+
+        const req = request.post(options);
+        const stream = fs.createReadStream(file);
+        stream.pipe(req);
+        req.pipe(process.stdout);
+      });
+    } else {
+      let options = {
+        url: fullURL(),
+        json: true,
+        body: JSON.parse(program.data),
+      };
+
+      request.post(options, handleResponse);
+    }
   });
 
 function handleError(err) {
