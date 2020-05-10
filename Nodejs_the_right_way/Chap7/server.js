@@ -13,6 +13,7 @@ const app = express();
 app.use(morgan("dev"));
 
 const search = require("./lib/search")(app, nconf.get("es"));
+const bundle = require("./lib/bundle")(app, nconf.get("es"));
 
 app.get("/api/version", (req, res) => res.status(200).send(pkg.version));
 

@@ -4,6 +4,6 @@
     "hostname": "localhost",
     "port": "9200",
     "book_index": "books",
-    "bundles_index": "b4"
+    "bundle_index": "b4"
   }
 }
