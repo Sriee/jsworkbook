@@ -89,4 +89,53 @@ module.exports = (app, es) => {
       res.status(esRespErr.statusCode || 502).json(esRespErr.error);
     }
   });
+
+  app.delete("/api/bundle/:id", async (req, res) => {
+    try {
+      const bundleResp = await rp.del({
+        url: `${url}/${req.params.id}`,
+        json: true,
+      });
+      res.status(200).json(bundleResp);
+    } catch (esRespErr) {
+      res.status(esRespErr.statusCode || 502).json(esRespErr.error);
+    }
+  });
+
+  app.delete("/api/bundle/:id/book/:pgid", async (req, res) => {
+    const bundleURL = `${url}/${req.params.id}`;
+    const bookURL = `http://${es.hostname}:${es.port}/${es.book_index}/books/${req.params.pgid}`;
+
+    try {
+      const [
+        { _source: bundleRespBody, _version: version },
+        { _source: bookRespBody },
+      ] = await Promise.all([
+        rp({ url: bundleURL, json: true }),
+        rp({ url: bookURL, json: true }),
+      ]);
+
+      const idx = bundleRespBody.books.findIndex(
+        (book) => book.id === bookRespBody.id
+      );
+      if (idx !== -1) {
+        bundleRespBody.books.splice(idx, 1);
+
+        const updateResp = await rp.put({
+          url: bundleURL,
+          qs: { version },
+          json: true,
+          body: bundleRespBody,
+        });
+
+        res.status(200).json(updateResp);
+      } else {
+        res.status(409).json({
+          error: `Book ${req.params.pgid} does not exists in the bundle. Ignoring delete!`,
+        });
+      }
+    } catch (esRespErr) {
+      res.status(esRespErr.statusCode || 502).json(esRespErr.error);
+    }
+  });
 };
