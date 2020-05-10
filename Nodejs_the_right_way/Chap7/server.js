@@ -10,9 +10,9 @@ nconf.defaults({ conf: `${__dirname}/config.json` });
 nconf.file(nconf.get("conf"));
 
 const app = express();
-const search = require("./lib/search")(app, nconf.get("es"));
-
 app.use(morgan("dev"));
+
+const search = require("./lib/search")(app, nconf.get("es"));
 
 app.get("/api/version", (req, res) => res.status(200).send(pkg.version));
 

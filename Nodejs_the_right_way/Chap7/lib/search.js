@@ -1,4 +1,5 @@
 const request = require("request");
+const rp = require("request-promise");
 
 module.exports = (app, es) => {
   const url = `http://${es.hostname}:${es.port}/${es.book_index}/books/_search/`;
@@ -36,39 +37,24 @@ module.exports = (app, es) => {
   });
 
   app.get("/api/suggest/:field/:query", (req, res) => {
-    const promise = new Promise((resolve, reject) => {
-      let options = {
-        url: url,
-        json: true,
-        body: {
-          size: 0,
-          suggest: {
-            suggestions: {
-              text: req.params.query,
-              term: {
-                field: req.params.field,
-                suggest_mode: "always",
-              },
+    let options = {
+      url: url,
+      json: true,
+      body: {
+        size: 0,
+        suggest: {
+          suggestions: {
+            text: req.params.query,
+            term: {
+              field: req.params.field,
+              suggest_mode: "always",
             },
           },
         },
-      };
+      },
+    };
 
-      request.get(options, (err, esResp, esRespBody) => {
-        if (err) {
-          reject({ error: err });
-          return;
-        }
-
-        if (esResp.statusCode !== 200) {
-          reject({ status: esResp.statusCode, error: esRespBody });
-          return;
-        }
-
-        resolve(esRespBody);
-      });
-    });
-    promise
+    rp(options)
       .then((esRespBody) => {
         res.status(200).json(esRespBody.suggest.suggestions);
       })
