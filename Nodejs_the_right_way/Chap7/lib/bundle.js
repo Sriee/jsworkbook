@@ -55,4 +55,38 @@ module.exports = (app, es) => {
       res.status(esRespErr.statusCode || 502).json(esRespErr.error);
     }
   });
+
+  app.put("/api/bundle/:id/book/:pgid", async (req, res) => {
+    const bundleURL = `${url}/${req.params.id}`;
+    const bookURL = `http://${es.hostname}:${es.port}/${es.book_index}/books/${req.params.pgid}`;
+
+    try {
+      const [
+        { _source: bundleRespBody, _version: version },
+        { _source: bookRespBody },
+      ] = await Promise.all([
+        rp({ url: bundleURL, json: true }),
+        rp({ url: bookURL, json: true }),
+      ]);
+
+      if (
+        bundleRespBody.books.findIndex(
+          (book) => book.id === req.params.pgid
+        ) === -1
+      ) {
+        bundleRespBody.books.push(bookRespBody);
+      }
+
+      const updateResp = await rp.put({
+        url: bundleURL,
+        qs: { version },
+        json: true,
+        body: bundleRespBody,
+      });
+
+      res.status(200).json(updateResp);
+    } catch (esRespErr) {
+      res.status(esRespErr.statusCode || 502).json(esRespErr.error);
+    }
+  });
 };
